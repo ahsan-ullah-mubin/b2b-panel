@@ -85,11 +85,11 @@ export default function SpecialOffer() {
         slidesPerView={4}
         loop={true}
         pagination={{ clickable: true }}
-        className="!pt-8"
+        className="!pt-8 !px-4"
       >
         {filteredOffers.map((offer) => (
           <SwiperSlide key={offer.id}>
-            <div className="!pb-11">
+            <div className="!pb-11 !overflow-visible">
               <Image
                 src={offer.img}
                 alt={offer.category}

@@ -25,11 +25,21 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.swiper-button-prev {
+  left: 0px !important;
+  z-index: 50 !important;
+}
+.swiper-button-next {
+  right: 0px !important;
+  z-index: 50 !important;
+}
+
 .swiper-button-prev,
 .swiper-button-next {
   padding: 6.33px !important;
   background: white !important;
-  border-radius: 50% !important;
+  box-shadow: 0 19px 9.5px 0 rgba(88, 154, 228, 0.04) !important;
+  border-radius: 38px !important;
   color: #8E191C !important;
   width: 40px !important;
   height: 40px !important;
