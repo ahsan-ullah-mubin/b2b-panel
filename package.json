@@ -15,7 +15,8 @@
     "pullstate": "^2.0.0-pre.9",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "sass": "^1.92.1"
+    "sass": "^1.92.1",
+    "swiper": "^11.2.10"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
