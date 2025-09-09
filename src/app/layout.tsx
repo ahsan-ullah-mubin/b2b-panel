@@ -1,12 +1,13 @@
 import { AppContent } from "@/components/Common/AntdItem/Content/Content";
 import { Sidebar } from "@/components/Common/AntdItem/Sidebar/Sidebar";
+import { theme } from "@/theme/themeConfig";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 import { ConfigProvider, Layout } from "antd";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { theme } from "@/theme/themeConfig";
-import SidebarTwo from "@/components/Common/AntdItem/Sidebar/SidebarTwo";
+import { NavBar } from "@/components/Common/Navbar/Navbar";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -38,6 +39,7 @@ export default function RootLayout({
             <Layout>
               <Sidebar />
               <Layout>
+                <NavBar/>
                 <AppContent>{children}</AppContent>
               </Layout>
             </Layout>

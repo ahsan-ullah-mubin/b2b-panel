@@ -1,10 +1,12 @@
-
+import { Content } from "antd/es/layout/layout";
 import React from "react";
 
 
-export function AppContent({ children }: { children: React.ReactNode }) {
-  return (
 
+export function AppContent({ children }: { children: React.ReactNode }) {
+  
+  return (
+    <Content style={{ background:'#FAFAFA'}}>
       <div
         style={{
           padding: 24,
@@ -13,6 +15,6 @@ export function AppContent({ children }: { children: React.ReactNode }) {
       >
         {children}
       </div>
- 
+    </Content>
   );
 }
