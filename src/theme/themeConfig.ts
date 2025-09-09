@@ -10,10 +10,12 @@ export const theme: ThemeConfig = {
     Menu:{
       itemSelectedBg:"#FFF",
       // item:'#8E191C'
+      
       itemColor:'#FFF',
       itemSelectedColor: '#8E191C',
+  
       itemHoverBg:'#FFFFFF4D',
-      itemHoverColor:'#FFF'
+      itemHoverColor:'#FFF',
 
     },
      Layout: {

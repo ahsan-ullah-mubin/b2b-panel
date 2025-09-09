@@ -1,12 +1,13 @@
 "use client";
-import { Button, Layout, Menu, MenuProps } from "antd";
+import { UIStore } from "@/utils/store/UIStore";
 import {
-  DesktopOutlined,
-  FileOutlined,
-  PieChartOutlined,
-  TeamOutlined,
-  UserOutlined,
+  AppstoreOutlined,
+  BookFilled,
+  CustomerServiceOutlined,
+  SettingOutlined,
 } from "@ant-design/icons";
+import { Button, Layout, Menu, MenuProps } from "antd";
+import { Book, Calendar, PhoneCall, Plane } from "lucide-react";
 const { Sider } = Layout;
 export function Sidebar() {
   type MenuItem = Required<MenuProps>["items"][number];
@@ -25,36 +26,42 @@ export function Sidebar() {
   }
 
   const items: MenuItem[] = [
-    getItem("Option 1", "1", <PieChartOutlined />),
-    getItem("Option 2", "2", <DesktopOutlined />),
-    getItem("User", "sub1", <UserOutlined />, [
-      getItem("Tom", "3"),
-      getItem("Bill", "4"),
-      getItem("Alex", "5"),
+    getItem("Dashboard", "1", <AppstoreOutlined />),
+    getItem("My Bookings", "sub1", <BookFilled />, [
+      getItem("Flights", "3", <Plane className="size-4" />),
+      getItem("Holydays", "4", <Calendar className="size-4" />),
+      getItem("Visa", "5", <Book className="size-4" />),
     ]),
-    getItem("Team", "sub2", <TeamOutlined />, [
-      getItem("Team 1", "6"),
-      getItem("Team 2", "8"),
-    ]),
-    getItem("Files", "9", <FileOutlined />),
+    getItem("Payment Ledger", "6", <PhoneCall className="size-4" />),
+    getItem("Manage Deposit Request", "7", <PhoneCall className="size-4" />),
+    // Bottom items
+    getItem("Support", "8", <CustomerServiceOutlined />),
+    getItem("Settings", "9", <SettingOutlined />),
   ];
-  const getLayoutCollapsed = false;
+
+  const getsidebarLayoutCollapsed = UIStore.useState(
+    (s) => s.getsidebarLayoutCollapsed
+  );
   return (
-    <div style={{ width: "280px" }}>
+    <div style={{ width: getsidebarLayoutCollapsed ? "80px" : "280px" }}>
       <Sider
         trigger={null}
         collapsible
-        collapsed={getLayoutCollapsed}
+        collapsed={getsidebarLayoutCollapsed}
         style={{
           height: "100vh",
           position: "fixed",
           // background: "#353535",
-          padding: 24,
+          padding: getsidebarLayoutCollapsed ? 12 : 24,
         }}
         width={280}
         // className="h-screen fixed"
       >
-        <div className="flex items-center justify-between mb-4">
+        <div
+          className={`flex items-center ${
+            getsidebarLayoutCollapsed ? " flex-col gap-3 mt-3" : "flex-row "
+          } justify-between mb-4`}
+        >
           <span>
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -105,6 +112,11 @@ export function Sidebar() {
           <Button
             variant="text"
             style={{ background: "transparent", border: "none" }}
+            onClick={() => {
+              UIStore.update((s) => {
+                s.getsidebarLayoutCollapsed = !s.getsidebarLayoutCollapsed;
+              });
+            }}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -138,8 +150,7 @@ export function Sidebar() {
         </div>
 
         <Menu
-          // theme="dark"
-          style={{background:'transparent'}}
+          style={{ background: "transparent", flex: "0 0 auto" }}
           defaultSelectedKeys={["1"]}
           mode="inline"
           items={items}
