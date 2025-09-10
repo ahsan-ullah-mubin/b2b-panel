@@ -17,6 +17,7 @@ export function AppContent({ children }: { children: React.ReactNode }) {
       <style>{customClass}</style>
       <div
         style={{
+          marginTop:64,
           padding: 24,
           minHeight: 360,
         }}

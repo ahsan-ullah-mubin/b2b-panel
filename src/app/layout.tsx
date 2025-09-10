@@ -7,6 +7,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { NavBar } from "@/components/Common/Navbar/Navbar";
+import ContentNavWrapper from "@/components/Common/ContentNavWrapper/ContentNavWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,10 +39,16 @@ export default function RootLayout({
           <ConfigProvider theme={theme}>
             <Layout>
               <Sidebar />
-              <Layout>
-                <NavBar/>
+
+              {/* <Layout className="ml-[280px]" >
+                <NavBar />
                 <AppContent>{children}</AppContent>
-              </Layout>
+              </Layout> */}
+              <ContentNavWrapper>
+                {
+                  children
+                }
+              </ContentNavWrapper>
             </Layout>
           </ConfigProvider>
         </AntdRegistry>
