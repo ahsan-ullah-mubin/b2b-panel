@@ -31,7 +31,7 @@ export function NavBar() {
             </svg>
             <div className='p-2 bg-white rounded-full text-[#616060] relative'>
               <Bell />
-              <div className='absolute -top-7 right-2'>
+              <div className='absolute -top-3 right-2'>
                 <span className='text-[10px] font-bold  text-white  p-1 bg-[#8E191C] rounded-full'>12</span>
               </div>
             </div>
