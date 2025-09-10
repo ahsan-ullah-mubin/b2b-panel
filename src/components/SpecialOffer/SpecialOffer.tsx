@@ -54,7 +54,7 @@ export default function SpecialOffer() {
       : offers.filter((offer) => offer.category === activeTab);
 
   return (
-    <div className="py-6">
+    <div className="py-6 w-full">
       <div className="flex justify-between items-center">
         <h1 className="text-[32px] font-bold text-[#8E191C]">
           Special Offer <span className="text-[#292828]">Packages</span>
