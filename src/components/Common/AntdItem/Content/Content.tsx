@@ -30,6 +30,12 @@ export function AppContent({ children }: { children: React.ReactNode }) {
    font-weight:700;
   color:#8E191C
 }
+.ant-picker 
+  .ant-picker-input > input::placeholder {
+    font-size: 10px; 
+    color: #888;       
+    opacity: 1;       
+}
 
   `;
 

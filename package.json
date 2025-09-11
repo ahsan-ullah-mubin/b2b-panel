@@ -12,6 +12,7 @@
     "@ant-design/nextjs-registry": "^1.1.0",
     "antd": "^5.27.3",
     "i": "^0.3.7",
+    "lodash": "^4.17.21",
     "lucide-react": "^0.543.0",
     "next": "15.5.2",
     "npm": "^11.6.0",
@@ -27,6 +28,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@types/lodash": "^4.17.20",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

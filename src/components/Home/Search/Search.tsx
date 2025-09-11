@@ -6,36 +6,45 @@ import {
   SearchOutlined,
   SwapOutlined,
 } from "@ant-design/icons";
+import lodash from "lodash";
 import { Button, Card, DatePicker, Dropdown, Radio } from "antd";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import AirportSearchDropdown from "./AirportSearchDropdown";
 import "./Search.css";
 import PassengerSelector from "./Travelar/TravelDropdown";
+import { SearchConfig } from "@/config/SearchConfig/search.config";
 export default function FlightSearch() {
   const [activeTab, setActiveTab] = useState("All");
   const [tripType, setTripType] = useState<
     "oneWay" | "roundTrip" | "multiCity"
   >("oneWay");
-  const [from, setFrom] = useState<FlightSearchFormNToType[]>([{
-    id:1,
-    city: "Dhaka",
-    country: "Bangladesh",
-    airport: "Hazrat Shahjalal International Airport",
-    code: "DAC",
-  }]);
-  const [to, setTo] = useState<FlightSearchFormNToType[]>([{
-    id:1,
-    city: "Cox",
-    country: "Bangladesh",
-    airport: "Hazrat Shahjalal International Airport",
-    code: "DAC",
-  }]);
+  const [from, setFrom] = useState<FlightSearchFormNToType[]>([
+    {
+      id: 1,
+      city: "Dhaka",
+      country: "Bangladesh",
+      airport: "Hazrat Shahjalal International Airport",
+      code: "DAC",
+    },
+  ]);
+  const [to, setTo] = useState<FlightSearchFormNToType[]>([
+    {
+      id: 1,
+      city: "Cox",
+      country: "Bangladesh",
+      airport: "Hazrat Shahjalal International Airport",
+      code: "DAC",
+    },
+  ]);
 
   const [multicityRowLength, setMulticityRowLength] = useState<number>(1);
-  const [journeyDate, setJourneyDate] = useState(dayjs());
-  const [returnDate, setReturnDate] = useState(dayjs().add(1, "day"));
+  const [journeyDates, setJourneyDates] = useState<
+    { id: number; date: Dayjs }[]
+  >([{ id: 1, date: dayjs() }]);
+
+  const [returnDate, setReturnDate] = useState<Dayjs | null>(null);
   const [passengers, setPassengers] = useState<Passengers>({
     adults: 1,
     children: 0,
@@ -54,35 +63,100 @@ export default function FlightSearch() {
     setTo(temp);
   };
   const handleSelectFrom = (airport: {
-    id:number;
+    id: number;
     city: string;
     country: string;
     airport: string;
     code: string;
   }) => {
-    setFrom((prev) => [...prev,airport]);
+    setFrom((prev) => {
+      const exists = prev.find((item) => item.id === airport.id);
+
+      if (exists) {
+        // update existing
+        return prev.map((item) => (item.id === airport.id ? airport : item));
+      } else {
+        // add new
+        return [...prev, airport];
+      }
+    });
+
+    const findInTo = to?.find((item) => item?.id === airport?.id);
+
+    if (lodash.isEqual(findInTo, airport)) {
+      setTo((prev) =>
+        prev.map((item) =>
+          item.id === airport.id
+            ? { ...item, city: "", country: "", airport: "", code: "" }
+            : item
+        )
+      );
+    }
   };
+
   const handleSelectedTo = (airport: {
-    id:number;
+    id: number;
     city: string;
     country: string;
     airport: string;
     code: string;
   }) => {
-    setTo((prev) => [...prev,airport]);
+    setTo((prev) => {
+      const exists = prev.find((item) => item.id === airport.id);
+
+      if (exists) {
+        // update existing
+        return prev.map((item) => (item.id === airport.id ? airport : item));
+      } else {
+        // add new
+        return [...prev, airport];
+      }
+    });
+    const findInForm = from?.find((item) => item?.id === airport?.id);
+
+    if (lodash.isEqual(findInForm, airport)) {
+
+      setFrom((prev) =>
+        prev.map((item) =>
+          item.id === airport.id
+            ? { ...item, city: "", country: "", airport: "", code: "" }
+            : item
+        )
+      );
+    }
+  };
+
+  const handleJourneyDateChange = (id: number, date: Dayjs) => {
+    setJourneyDates((prev) => {
+      const exists = prev.find((d) => d.id === id);
+      if (exists) {
+        return prev.map((d) => (d.id === id ? { ...d, date } : d));
+      } else {
+        return [...prev, { id, date }];
+      }
+    });
   };
 
   const router = useRouter();
 
   const handleSearch = () => {
     const { adults, children, childAges, infants, travelClass } = passengers;
-
     const trips =
       tripType === "roundTrip"
-        ? `${from[0].code},${to[0].code},${journeyDate.format("YYYY-MM-DD")},${
-            to[0].code
-          },${from[0].code},${returnDate?.format("YYYY-MM-DD")}`
-        : `${from[0].code},${to[0].code},${journeyDate.format("YYYY-MM-DD")}`;
+        ? `${from[0].code},${to[0].code},${journeyDates[0]?.date.format(
+            "YYYY-MM-DD"
+          )},${to[0].code},${from[0].code},${returnDate?.format("YYYY-MM-DD")}`
+        : tripType === "multiCity"
+        ? from
+            .map((f, i) => {
+              const t = to[i];
+              const jd = journeyDates[i];
+              return `${f.code},${t?.code},${jd?.date?.format("YYYY-MM-DD")}`;
+            })
+            .join(",")
+        : `${from[0].code},${to[0].code},${journeyDates[0]?.date.format(
+            "YYYY-MM-DD"
+          )}`;
 
     const childAgesStr = childAges.slice(0, children).join(",");
 
@@ -95,13 +169,10 @@ export default function FlightSearch() {
       trips: trips,
     });
 
-    router.replace(`/?${params.toString()}`); // current home path + params
+    router.replace(`/?${params.toString()}`);
   };
 
   const tabs = ["Flight", "Hotel", "Package", "Visa", "Umrah"];
-
-  console.log("form er value======", from)
-
   return (
     <div
       style={{
@@ -176,7 +247,26 @@ export default function FlightSearch() {
         <div style={{ marginBottom: 10 }}>
           <Radio.Group
             value={tripType}
-            onChange={(e) => setTripType(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setTripType(value);
+              if (value === "oneWay") {
+                setReturnDate(null);
+              } else if (value === "roundTrip") {
+                const journeyDate = journeyDates[0]?.date;
+                setReturnDate(
+                  journeyDate
+                    ? journeyDate.add(SearchConfig.returnDateGap, "day")
+                    : null
+                );
+              }
+
+              if (value === "oneWay" || value === "roundTrip") {
+                setFrom((prev) => (prev.length > 0 ? [prev[0]] : []));
+                setTo((prev) => (prev.length > 0 ? [prev[0]] : []));
+                setJourneyDates((prev) => (prev.length > 0 ? [prev[0]] : []));
+              }
+            }}
           >
             <Radio value="oneWay">One Way</Radio>
             <Radio value="roundTrip">Round Trip</Radio>
@@ -191,7 +281,6 @@ export default function FlightSearch() {
         >
           <div className="flex items-center gap-[21.79px] relative  basis-2/5">
             <Dropdown
-              onOpenChange={(flag) => console.log("ata flag--------", flag)}
               popupRender={() => (
                 <AirportSearchDropdown onSelect={handleSelectFrom} />
               )}
@@ -208,10 +297,10 @@ export default function FlightSearch() {
               >
                 <h5 className="text-[#616060] text-[14px]">From</h5>
                 <h2 className="text-[#292828] text-[18px] font-bold ">
-                  {from[0]?.city}{" "}
+                  {from[0]?.city || "Select a city"}{" "}
                 </h2>
                 <p className="text-[#616060] text-[16px]  line-clamp-1">
-                  {from[0]?.airport}
+                  {from[0]?.airport || "Click to choose an airport"}
                 </p>
               </div>
             </Dropdown>
@@ -252,10 +341,10 @@ export default function FlightSearch() {
               >
                 <h5 className="text-[#616060] text-sm">To</h5>
                 <h2 className="text-[#292828] text-[18px] font-bold ">
-                  {to[0]?.city}{" "}
+                  {to[0]?.city || "Select a city"}{" "}
                 </h2>
                 <p className="text-[#616060] text-base  line-clamp-1">
-                  {to[0]?.airport}
+                  {to[0]?.airport || "Click to choose an airport"}
                 </p>
               </div>
             </Dropdown>
@@ -276,21 +365,27 @@ export default function FlightSearch() {
               <DatePicker
                 // open={open}
                 format="DD MMM, YYYY"
-                defaultValue={journeyDate}
-                value={journeyDate}
+                defaultValue={journeyDates[0]?.date}
+                value={journeyDates[0]?.date}
                 onChange={(date) => {
                   if (date) {
-                    setJourneyDate(date);
+                    handleJourneyDateChange(1, date);
+                    setReturnDate(null);
                   }
                 }}
                 renderExtraFooter={() => null}
                 suffixIcon={null}
+                disabledDate={(current) => {
+                  return current && current < dayjs().startOf("day");
+                }}
                 style={{ border: "none", padding: 0 }}
                 className="font-bold "
               />
               <h4 className="text-[#616060] text-base line-clamp-1">
                 {/* Saturday */}
-                {journeyDate ? journeyDate.format("dddd") : ""}
+                {journeyDates[0].date
+                  ? journeyDates[0]?.date.format("dddd")
+                  : ""}
               </h4>
             </button>
 
@@ -303,35 +398,30 @@ export default function FlightSearch() {
               disabled={tripType === "oneWay"}
               className="px-[17.08px] py-[10.64px] text-start relative flex justify-between flex-col w-full min-w-[179.294px] rounded-r-[7.07px] "
             >
-              {tripType === "oneWay" ? (
-                <div className="space-y-5">
-                  <h5 className="text-[#616060] text-sm">Return Date</h5>
-                  <h4 className="text-[#616060] text-xs ">
-                    Save more on return flight
-                  </h4>
-                </div>
-              ) : (
-                <>
-                  <h5 className="text-[#616060] text-sm">Return Date</h5>
-                  <DatePicker
-                    format="DD MMM, YYYY"
-                    defaultValue={returnDate}
-                    value={returnDate}
-                    onChange={(date) => {
-                      if (date) {
-                        setReturnDate(date);
-                      }
-                    }}
-                    renderExtraFooter={() => null}
-                    suffixIcon={null}
-                    style={{ border: "none", padding: 0 }}
-                    className="font-bold"
-                  />
-                  <h4 className="text-[#616060] text-base line-clamp-1">
-                    Saturday
-                  </h4>
-                </>
-              )}
+              <>
+                <h5 className="text-[#616060] text-sm">Return Date</h5>
+                <DatePicker
+                  format="DD MMM, YYYY"
+                  defaultValue={returnDate}
+                  value={returnDate}
+                  onChange={(date) => {
+                    if (date) {
+                      setReturnDate(date);
+                    }
+                  }}
+                  renderExtraFooter={() => null}
+                  suffixIcon={null}
+                  placeholder="Save more on return flight"
+                  style={{ border: "none", padding: 0 }}
+                  disabledDate={(current) =>
+                    current && current < journeyDates[0]?.date?.startOf("day")
+                  }
+                  className="font-bold"
+                />
+                <h4 className="text-[#616060] text-base line-clamp-1">
+                  {returnDate ? returnDate.format("dddd") : ""}
+                </h4>
+              </>
             </button>
           </div>
 
@@ -376,7 +466,7 @@ export default function FlightSearch() {
           {/* row 1  */}
           <div className=" grid grid-cols-4    gap-[21.79px]">
             <Dropdown
-              onOpenChange={(flag) => console.log("ata flag--------", flag)}
+       
               popupRender={() => (
                 <AirportSearchDropdown onSelect={handleSelectFrom} />
               )}
@@ -393,10 +483,10 @@ export default function FlightSearch() {
               >
                 <h5 className="text-[#616060] text-[14px]">From</h5>
                 <h2 className="text-[#292828] text-[18px] font-bold ">
-                  {from[0]?.city}{" "}
+                  {from[0]?.city || "Select a city"}{" "}
                 </h2>
                 <p className="text-[#616060] text-[16px]  line-clamp-1">
-                  {from[0]?.airport}
+                  {from[0]?.airport || "Click to choose an airport"}
                 </p>
               </div>
             </Dropdown>
@@ -420,10 +510,10 @@ export default function FlightSearch() {
               >
                 <h5 className="text-[#616060] text-sm">To</h5>
                 <h2 className="text-[#292828] text-[18px] font-bold ">
-                  {to[0]?.city}{" "}
+                  {to[0]?.city || "Select a city"}{" "}
                 </h2>
                 <p className="text-[#616060] text-base  line-clamp-1">
-                  {to[0]?.airport}
+                  {to[0]?.airport || "Click to choose an airport"}
                 </p>
               </div>
             </Dropdown>
@@ -442,11 +532,11 @@ export default function FlightSearch() {
               <DatePicker
                 // open={open}
                 format="DD MMM, YYYY"
-                defaultValue={journeyDate}
-                value={journeyDate}
+                defaultValue={journeyDates[0]?.date}
+                value={journeyDates[0]?.date}
                 onChange={(date) => {
                   if (date) {
-                    setJourneyDate(date);
+                    handleJourneyDateChange(1, date);
                   }
                 }}
                 renderExtraFooter={() => null}
@@ -456,7 +546,9 @@ export default function FlightSearch() {
               />
               <h4 className="text-[#616060] text-base line-clamp-1">
                 {/* Saturday */}
-                {journeyDate ? journeyDate.format("dddd") : ""}
+                {journeyDates[0].date
+                  ? journeyDates[0]?.date.format("dddd")
+                  : ""}
               </h4>
             </button>
 
@@ -496,17 +588,22 @@ export default function FlightSearch() {
 
           {Array?.from({ length: multicityRowLength }).map((_, index) => {
             const isFirstIndex = index === 0;
-            console.log('ata first index==', isFirstIndex, index)
-            const isLastIndex = index === multicityRowLength - 1;
 
-             const fromValue = from[index +1];
-  const toValue = to[index + 1];
+            const isLastIndex = index === multicityRowLength - 1;
+            // console.log("ata holo index========", index + 2);
+            const startingIndex = index + 2;
+            const fromValue = from[index + 1];
+            const toValue = to[index + 1];
+            const journeyDateValue = journeyDates[index + 1];
             return (
               <div key={index} className="grid grid-cols-4 gap-[21.79px]">
                 <Dropdown
                   onOpenChange={(flag) => console.log("ata flag--------", flag)}
                   popupRender={() => (
-                    <AirportSearchDropdown onSelect={handleSelectFrom}  />
+                    <AirportSearchDropdown
+                      onSelect={handleSelectFrom}
+                      trackingId={index + 2}
+                    />
                   )}
                   trigger={["click"]}
                 >
@@ -521,10 +618,12 @@ export default function FlightSearch() {
                   >
                     <h5 className="text-[#616060] text-[14px]">From</h5>
                     <h2 className="text-[#292828] text-[18px] font-bold ">
-                         {fromValue?.city ? fromValue.city : "Select a city"}
+                      {fromValue?.city ? fromValue.city : "Select a city"}
                     </h2>
                     <p className="text-[#616060] text-[16px]  line-clamp-1">
-                      {fromValue?.airport ? fromValue.airport : "Click to choose an airport"}
+                      {fromValue?.airport
+                        ? fromValue.airport
+                        : "Click to choose an airport"}
                     </p>
                   </div>
                 </Dropdown>
@@ -533,7 +632,10 @@ export default function FlightSearch() {
                   // open={isOpen("from")}
                   // onOpenChange={(flag) => setOpenDropdownId(flag ? "from" : null)}
                   popupRender={() => (
-                    <AirportSearchDropdown onSelect={handleSelectedTo} />
+                    <AirportSearchDropdown
+                      onSelect={handleSelectedTo}
+                      trackingId={index + 2}
+                    />
                   )}
                   trigger={["click"]}
                 >
@@ -548,12 +650,12 @@ export default function FlightSearch() {
                   >
                     <h5 className="text-[#616060] text-sm">To</h5>
                     <h2 className="text-[#292828] text-[18px] font-bold ">
-                
-                      { toValue?.city ? toValue.city : "Select a city"}
+                      {toValue?.city ? toValue.city : "Select a city"}
                     </h2>
                     <p className="text-[#616060] text-base  line-clamp-1">
-                     
-                      {toValue?.airport ? toValue.airport : "Click to choose an airport"}
+                      {toValue?.airport
+                        ? toValue.airport
+                        : "Click to choose an airport"}
                     </p>
                   </div>
                 </Dropdown>
@@ -569,11 +671,11 @@ export default function FlightSearch() {
                   <DatePicker
                     // open={open}
                     format="DD MMM, YYYY"
-                    defaultValue={journeyDate}
-                    value={journeyDate}
+                    defaultValue={journeyDateValue?.date}
+                    value={journeyDateValue?.date}
                     onChange={(date) => {
                       if (date) {
-                        setJourneyDate(date);
+                        handleJourneyDateChange(startingIndex, date);
                       }
                     }}
                     renderExtraFooter={() => null}
@@ -583,7 +685,9 @@ export default function FlightSearch() {
                   />
                   <h4 className="text-[#616060] text-base line-clamp-1">
                     {/* Saturday */}
-                    {journeyDate ? journeyDate.format("dddd") : ""}
+                    {journeyDateValue?.date
+                      ? journeyDateValue?.date.format("dddd")
+                      : ""}
                   </h4>
                 </button>
 
