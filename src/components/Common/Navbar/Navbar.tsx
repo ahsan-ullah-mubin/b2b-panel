@@ -2,7 +2,7 @@ import { Header } from 'antd/es/layout/layout';
 import { Bell, DollarSign, Search, User } from "lucide-react";
 export function NavBar() {
   return (
-    <Header style={{ padding: "12px 24px", width: "100%", background: "#353535", height:64, position:'fixed' ,zIndex:50}}>
+    <Header style={{ padding: "12px 24px", width: "100%", background: "#353535", height:64 ,zIndex:50}}>
         <div className='flex justify-between items-center w-full h-full'>
 
           {/* Search */}

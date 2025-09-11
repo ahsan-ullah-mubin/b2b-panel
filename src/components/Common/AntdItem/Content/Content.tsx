@@ -10,6 +10,27 @@ export function AppContent({ children }: { children: React.ReactNode }) {
     color: #C76C6F;
 }
 
+.ant-radio-wrapper .ant-radio-checked .ant-radio-inner {
+    border-color: #8E191C;
+   background-color: transparent; 
+}
+.ant-radio-wrapper .ant-radio-inner::after {
+    background-color: #8E191C;
+   
+}
+    .ant-radio-wrapper:hover .ant-radio-inner {
+  border-color: #8E191C !important;
+}
+ .ant-radio-wrapper {
+  font-weight:550;
+   color: #616060; 
+  
+}
+   label.ant-radio-wrapper.ant-radio-wrapper-checked {
+   font-weight:700;
+  color:#8E191C
+}
+
   `;
 
   return (
@@ -17,7 +38,7 @@ export function AppContent({ children }: { children: React.ReactNode }) {
       <style>{customClass}</style>
       <div
         style={{
-          marginTop:64,
+          // marginTop:64,
           padding: 24,
           minHeight: 360,
         }}

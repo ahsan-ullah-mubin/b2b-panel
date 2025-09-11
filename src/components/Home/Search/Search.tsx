@@ -1,22 +1,51 @@
 "use client";
 
-import { SearchOutlined, SwapOutlined } from "@ant-design/icons";
-import { Button, Card, DatePicker, Input, Radio, Select, Tabs } from "antd";
+import { FlightSearchFormNToType, Passengers } from "@/types/FlightSearch";
+import {
+  CloseCircleFilled,
+  SearchOutlined,
+  SwapOutlined,
+} from "@ant-design/icons";
+import { Button, Card, DatePicker, Dropdown, Radio } from "antd";
 import dayjs from "dayjs";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-
-const { TabPane } = Tabs;
-
+import AirportSearchDropdown from "./AirportSearchDropdown";
+import "./Search.css";
+import PassengerSelector from "./Travelar/TravelDropdown";
 export default function FlightSearch() {
   const [activeTab, setActiveTab] = useState("All");
-  const [tripType, setTripType] = useState("round");
-  const [from, setFrom] = useState("DAC, Hazrat Shahjalal Intl");
-  const [to, setTo] = useState("DXB, Dubai International");
-  const [journeyDate, setJourneyDate] = useState(dayjs("2025-05-24"));
-  const [returnDate, setReturnDate] = useState(dayjs("2025-05-26"));
-  const [traveler, setTraveler] = useState(1);
-  const [classType, setClassType] = useState("Economy Class");
-  const [airlineCode, setAirlineCode] = useState("");
+  const [tripType, setTripType] = useState<
+    "oneWay" | "roundTrip" | "multiCity"
+  >("oneWay");
+  const [from, setFrom] = useState<FlightSearchFormNToType[]>([{
+    id:1,
+    city: "Dhaka",
+    country: "Bangladesh",
+    airport: "Hazrat Shahjalal International Airport",
+    code: "DAC",
+  }]);
+  const [to, setTo] = useState<FlightSearchFormNToType[]>([{
+    id:1,
+    city: "Cox",
+    country: "Bangladesh",
+    airport: "Hazrat Shahjalal International Airport",
+    code: "DAC",
+  }]);
+
+  const [multicityRowLength, setMulticityRowLength] = useState<number>(1);
+  const [journeyDate, setJourneyDate] = useState(dayjs());
+  const [returnDate, setReturnDate] = useState(dayjs().add(1, "day"));
+  const [passengers, setPassengers] = useState<Passengers>({
+    adults: 1,
+    children: 0,
+    childAges: [undefined, undefined, undefined, undefined] as (
+      | number
+      | undefined
+    )[],
+    infants: 0,
+    travelClass: "Economy",
+  });
 
   // Swap From <-> To
   const handleSwap = () => {
@@ -24,21 +53,54 @@ export default function FlightSearch() {
     setFrom(to);
     setTo(temp);
   };
-
-  const handleSearch = () => {
-    console.log({
-      tripType,
-      from,
-      to,
-      journeyDate: journeyDate.format("DD MMM, YYYY"),
-      returnDate: returnDate?.format("DD MMM, YYYY"),
-      traveler,
-      classType,
-      airlineCode,
-    });
+  const handleSelectFrom = (airport: {
+    id:number;
+    city: string;
+    country: string;
+    airport: string;
+    code: string;
+  }) => {
+    setFrom((prev) => [...prev,airport]);
+  };
+  const handleSelectedTo = (airport: {
+    id:number;
+    city: string;
+    country: string;
+    airport: string;
+    code: string;
+  }) => {
+    setTo((prev) => [...prev,airport]);
   };
 
-  const tabs = ["All", "Flight", "Hotel", "Tour"];
+  const router = useRouter();
+
+  const handleSearch = () => {
+    const { adults, children, childAges, infants, travelClass } = passengers;
+
+    const trips =
+      tripType === "roundTrip"
+        ? `${from[0].code},${to[0].code},${journeyDate.format("YYYY-MM-DD")},${
+            to[0].code
+          },${from[0].code},${returnDate?.format("YYYY-MM-DD")}`
+        : `${from[0].code},${to[0].code},${journeyDate.format("YYYY-MM-DD")}`;
+
+    const childAgesStr = childAges.slice(0, children).join(",");
+
+    const params = new URLSearchParams({
+      adult: adults.toString(),
+      child: children.toString(),
+      child_age: childAgesStr,
+      infant: infants.toString(),
+      cabin_class: travelClass,
+      trips: trips,
+    });
+
+    router.replace(`/?${params.toString()}`); // current home path + params
+  };
+
+  const tabs = ["Flight", "Hotel", "Package", "Visa", "Umrah"];
+
+  console.log("form er value======", from)
 
   return (
     <div
@@ -57,10 +119,9 @@ export default function FlightSearch() {
           boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
           padding: "40px 32px 32px 32px",
           position: "relative",
-          
         }}
         bodyStyle={{
-          padding:0
+          padding: 0,
         }}
       >
         <div
@@ -117,29 +178,44 @@ export default function FlightSearch() {
             value={tripType}
             onChange={(e) => setTripType(e.target.value)}
           >
-            <Radio value="one">One Way</Radio>
-            <Radio value="round">Round Trip</Radio>
-            <Radio value="multi">Multi-City</Radio>
+            <Radio value="oneWay">One Way</Radio>
+            <Radio value="roundTrip">Round Trip</Radio>
+            <Radio value="multiCity">Multi-City</Radio>
           </Radio.Group>
         </div>
 
-        <div className="flex gap-[21.79px]">
-          <div className="flex items-center gap-[21.79px] relative">
-            <div
-              style={{
-                borderRadius: " 7.07px",
-                border: "0.442px solid var(--ccc, #CCC)",
-                background: "var(--FFFFFF---pure-white, #FFF)",
-                height: " 88.372px",
-              }}
-              className="px-[17.08px] py-[10.64px] space-y-2  min-w-[198px]"
+        <div
+          className={`${
+            tripType === "multiCity" ? "hidden" : "flex"
+          }     gap-[21.79px]`}
+        >
+          <div className="flex items-center gap-[21.79px] relative  basis-2/5">
+            <Dropdown
+              onOpenChange={(flag) => console.log("ata flag--------", flag)}
+              popupRender={() => (
+                <AirportSearchDropdown onSelect={handleSelectFrom} />
+              )}
+              trigger={["click"]}
             >
-              <h5 className="text-[#616060] text-sm">From</h5>
-              <h2 className="text-[#292828] text-[18px] font-bold ">Dhaka </h2>
-              <h4 className="text-[#616060] text-base line-clamp-1">
-                DAC, Hajrat Shahj Shahj Shahj Shahj
-              </h4>
-            </div>
+              <div
+                style={{
+                  borderRadius: " 7.07px",
+                  border: "0.442px solid var(--ccc, #CCC)",
+                  background: "var(--FFFFFF---pure-white, #FFF)",
+                  // height: "88.372px",
+                }}
+                className="px-[17.08px] py-[10.64px] space-y-3  w-full min-w-[198px]"
+              >
+                <h5 className="text-[#616060] text-[14px]">From</h5>
+                <h2 className="text-[#292828] text-[18px] font-bold ">
+                  {from[0]?.city}{" "}
+                </h2>
+                <p className="text-[#616060] text-[16px]  line-clamp-1">
+                  {from[0]?.airport}
+                </p>
+              </div>
+            </Dropdown>
+
             {/* Swap Button */}
             <Button
               icon={<SwapOutlined />}
@@ -157,76 +233,398 @@ export default function FlightSearch() {
               }}
               className="!absolute !inset-0"
             />
+            <Dropdown
+              // open={isOpen("from")}
+              // onOpenChange={(flag) => setOpenDropdownId(flag ? "from" : null)}
+              popupRender={() => (
+                <AirportSearchDropdown onSelect={handleSelectedTo} />
+              )}
+              trigger={["click"]}
+            >
+              <div
+                style={{
+                  borderRadius: " 7.07px",
+                  border: "0.442px solid var(--ccc, #CCC)",
+                  background: "var(--FFFFFF---pure-white, #FFF)",
+                  // height: "88.372px",
+                }}
+                className="px-[17.08px] py-[10.64px] space-y-3  w-full min-w-[198px]"
+              >
+                <h5 className="text-[#616060] text-sm">To</h5>
+                <h2 className="text-[#292828] text-[18px] font-bold ">
+                  {to[0]?.city}{" "}
+                </h2>
+                <p className="text-[#616060] text-base  line-clamp-1">
+                  {to[0]?.airport}
+                </p>
+              </div>
+            </Dropdown>
+          </div>
+          <div className="flex items-center basis-2/5  ">
+            <button
+              style={{
+                border: "0.442px solid var(--ccc, #CCC)",
+                background: "var(--FFFFFF---pure-white, #FFF)",
+                height: "100%",
+              }}
+              className="px-[17.08px] text-start relative space flex justify-between flex-col py-[10.64px] w-full min-w-[179.294px] rounded-s-[7.07px] "
+            >
+              <h5 className="text-[#616060] text-sm">Journey Date</h5>
+              {/* <h2 className="text-[#292828] text-[18px] font-bold ">
+                24 May, 2025
+              </h2> */}
+              <DatePicker
+                // open={open}
+                format="DD MMM, YYYY"
+                defaultValue={journeyDate}
+                value={journeyDate}
+                onChange={(date) => {
+                  if (date) {
+                    setJourneyDate(date);
+                  }
+                }}
+                renderExtraFooter={() => null}
+                suffixIcon={null}
+                style={{ border: "none", padding: 0 }}
+                className="font-bold "
+              />
+              <h4 className="text-[#616060] text-base line-clamp-1">
+                {/* Saturday */}
+                {journeyDate ? journeyDate.format("dddd") : ""}
+              </h4>
+            </button>
+
+            <button
+              style={{
+                border: "0.442px solid var(--ccc, #CCC)",
+                background: "var(--FFFFFF---pure-white, #FFF)",
+                height: "100%",
+              }}
+              disabled={tripType === "oneWay"}
+              className="px-[17.08px] py-[10.64px] text-start relative flex justify-between flex-col w-full min-w-[179.294px] rounded-r-[7.07px] "
+            >
+              {tripType === "oneWay" ? (
+                <div className="space-y-5">
+                  <h5 className="text-[#616060] text-sm">Return Date</h5>
+                  <h4 className="text-[#616060] text-xs ">
+                    Save more on return flight
+                  </h4>
+                </div>
+              ) : (
+                <>
+                  <h5 className="text-[#616060] text-sm">Return Date</h5>
+                  <DatePicker
+                    format="DD MMM, YYYY"
+                    defaultValue={returnDate}
+                    value={returnDate}
+                    onChange={(date) => {
+                      if (date) {
+                        setReturnDate(date);
+                      }
+                    }}
+                    renderExtraFooter={() => null}
+                    suffixIcon={null}
+                    style={{ border: "none", padding: 0 }}
+                    className="font-bold"
+                  />
+                  <h4 className="text-[#616060] text-base line-clamp-1">
+                    Saturday
+                  </h4>
+                </>
+              )}
+            </button>
+          </div>
+
+          <Dropdown
+            popupRender={() => (
+              <PassengerSelector
+                setPassengers={setPassengers}
+                passengers={passengers}
+              />
+            )}
+            trigger={["click"]}
+            className="basis-1/5"
+          >
             <div
               style={{
                 borderRadius: " 7.07px",
                 border: "0.442px solid var(--ccc, #CCC)",
                 background: "var(--FFFFFF---pure-white, #FFF)",
-                height: " 88.372px",
+                // height: " 88.372px",
               }}
-              className="px-[17.08px] py-[10.64px] space-y-2  min-w-[198px]"
+              className="px-[17.08px] py-[10.64px] space-y-3  min-w-[197.437px] "
             >
-              <h5 className="text-[#616060] text-sm">To</h5>
-              <h2 className="text-[#292828] text-[18px] font-bold ">Dhaka </h2>
+              <h5 className="text-[#616060] text-sm">Traveler, Class</h5>
+              <h2 className="text-[#292828] text-[18px] font-bold ">
+                {/* 1 Travelers{" "} */}
+                {passengers?.adults +
+                  passengers?.children +
+                  passengers?.infants}{" "}
+                Travelers
+              </h2>
               <h4 className="text-[#616060] text-base line-clamp-1">
-                DAC, Hajrat Shahj Shahj Shahj Shahj
+                {passengers?.travelClass}
               </h4>
             </div>
-          </div>
-          <div className="flex items-center ">
-            <div
+          </Dropdown>
+        </div>
+        <div
+          className={` ${
+            tripType !== "multiCity" && "hidden"
+          } space-y-[21.79px] `}
+        >
+          {/* row 1  */}
+          <div className=" grid grid-cols-4    gap-[21.79px]">
+            <Dropdown
+              onOpenChange={(flag) => console.log("ata flag--------", flag)}
+              popupRender={() => (
+                <AirportSearchDropdown onSelect={handleSelectFrom} />
+              )}
+              trigger={["click"]}
+            >
+              <div
+                style={{
+                  borderRadius: " 7.07px",
+                  border: "0.442px solid var(--ccc, #CCC)",
+                  background: "var(--FFFFFF---pure-white, #FFF)",
+                  // height: "88.372px",
+                }}
+                className="px-[17.08px] py-[10.64px] space-y-3  w-full min-w-[198px]"
+              >
+                <h5 className="text-[#616060] text-[14px]">From</h5>
+                <h2 className="text-[#292828] text-[18px] font-bold ">
+                  {from[0]?.city}{" "}
+                </h2>
+                <p className="text-[#616060] text-[16px]  line-clamp-1">
+                  {from[0]?.airport}
+                </p>
+              </div>
+            </Dropdown>
+
+            <Dropdown
+              // open={isOpen("from")}
+              // onOpenChange={(flag) => setOpenDropdownId(flag ? "from" : null)}
+              popupRender={() => (
+                <AirportSearchDropdown onSelect={handleSelectedTo} />
+              )}
+              trigger={["click"]}
+            >
+              <div
+                style={{
+                  borderRadius: " 7.07px",
+                  border: "0.442px solid var(--ccc, #CCC)",
+                  background: "var(--FFFFFF---pure-white, #FFF)",
+                  // height: "88.372px",
+                }}
+                className="px-[17.08px] py-[10.64px] space-y-3  w-full min-w-[198px]"
+              >
+                <h5 className="text-[#616060] text-sm">To</h5>
+                <h2 className="text-[#292828] text-[18px] font-bold ">
+                  {to[0]?.city}{" "}
+                </h2>
+                <p className="text-[#616060] text-base  line-clamp-1">
+                  {to[0]?.airport}
+                </p>
+              </div>
+            </Dropdown>
+            <button
               style={{
-               
                 border: "0.442px solid var(--ccc, #CCC)",
                 background: "var(--FFFFFF---pure-white, #FFF)",
-                height: " 88.372px",
+                height: "100%",
               }}
-              className="px-[17.08px] py-[10.64px] space-y-2 min-w-[179.294px] rounded-s-[7.07px] "
+              className="px-[17.08px] text-start relative space flex justify-between flex-col py-[10.64px] w-full min-w-[179.294px] rounded-s-[7.07px] "
             >
               <h5 className="text-[#616060] text-sm">Journey Date</h5>
-              <h2 className="text-[#292828] text-[18px] font-bold ">
+              {/* <h2 className="text-[#292828] text-[18px] font-bold ">
                 24 May, 2025
-              </h2>
+              </h2> */}
+              <DatePicker
+                // open={open}
+                format="DD MMM, YYYY"
+                defaultValue={journeyDate}
+                value={journeyDate}
+                onChange={(date) => {
+                  if (date) {
+                    setJourneyDate(date);
+                  }
+                }}
+                renderExtraFooter={() => null}
+                suffixIcon={null}
+                style={{ border: "none", padding: 0 }}
+                className="font-bold "
+              />
               <h4 className="text-[#616060] text-base line-clamp-1">
-                Saturday
+                {/* Saturday */}
+                {journeyDate ? journeyDate.format("dddd") : ""}
               </h4>
-            </div>
+            </button>
 
-            <div
-              style={{
-          
-                border: "0.442px solid var(--ccc, #CCC)",
-                background: "var(--FFFFFF---pure-white, #FFF)",
-                height: " 88.372px",
-              }}
-              className="px-[17.08px] py-[10.64px] space-y-2 min-w-[179.294px] rounded-r-[7.07px] "
+            <Dropdown
+              popupRender={() => (
+                <PassengerSelector
+                  setPassengers={setPassengers}
+                  passengers={passengers}
+                />
+              )}
+              trigger={["click"]}
+              className=""
             >
-              <h5 className="text-[#616060] text-sm">Return Date</h5>
-              <h2 className="text-[#292828] text-[18px] font-bold ">
-                26 May, 2025
-              </h2>
-              <h4 className="text-[#616060] text-base line-clamp-1">
-                Saturday
-              </h4>
-            </div>
+              <div
+                style={{
+                  borderRadius: " 7.07px",
+                  border: "0.442px solid var(--ccc, #CCC)",
+                  background: "var(--FFFFFF---pure-white, #FFF)",
+                  // height: " 88.372px",
+                }}
+                className="px-[17.08px] py-[10.64px] space-y-3  min-w-[197.437px] "
+              >
+                <h5 className="text-[#616060] text-sm">Traveler, Class</h5>
+                <h2 className="text-[#292828] text-[18px] font-bold ">
+                  {/* 1 Travelers{" "} */}
+                  {passengers?.adults +
+                    passengers?.children +
+                    passengers?.infants}{" "}
+                  Travelers
+                </h2>
+                <h4 className="text-[#616060] text-base line-clamp-1">
+                  {passengers?.travelClass}
+                </h4>
+              </div>
+            </Dropdown>
           </div>
-          <div
-            style={{
-              borderRadius: " 7.07px",
-              border: "0.442px solid var(--ccc, #CCC)",
-              background: "var(--FFFFFF---pure-white, #FFF)",
-              height: " 88.372px",
-            }}
-            className="px-[17.08px] py-[10.64px] space-y-2 min-w-[197.437px] "
-          >
-            <h5 className="text-[#616060] text-sm">Traveler, Class</h5>
-            <h2 className="text-[#292828] text-[18px] font-bold ">
-              1 Travelers{" "}
-            </h2>
-            <h4 className="text-[#616060] text-base line-clamp-1">
-              Economy Class
-            </h4>
-          </div>
+
+          {Array?.from({ length: multicityRowLength }).map((_, index) => {
+            const isFirstIndex = index === 0;
+            console.log('ata first index==', isFirstIndex, index)
+            const isLastIndex = index === multicityRowLength - 1;
+
+             const fromValue = from[index +1];
+  const toValue = to[index + 1];
+            return (
+              <div key={index} className="grid grid-cols-4 gap-[21.79px]">
+                <Dropdown
+                  onOpenChange={(flag) => console.log("ata flag--------", flag)}
+                  popupRender={() => (
+                    <AirportSearchDropdown onSelect={handleSelectFrom}  />
+                  )}
+                  trigger={["click"]}
+                >
+                  <div
+                    style={{
+                      borderRadius: " 7.07px",
+                      border: "0.442px solid var(--ccc, #CCC)",
+                      background: "var(--FFFFFF---pure-white, #FFF)",
+                      // height: "88.372px",
+                    }}
+                    className="px-[17.08px] py-[10.64px] space-y-3  w-full min-w-[198px]"
+                  >
+                    <h5 className="text-[#616060] text-[14px]">From</h5>
+                    <h2 className="text-[#292828] text-[18px] font-bold ">
+                         {fromValue?.city ? fromValue.city : "Select a city"}
+                    </h2>
+                    <p className="text-[#616060] text-[16px]  line-clamp-1">
+                      {fromValue?.airport ? fromValue.airport : "Click to choose an airport"}
+                    </p>
+                  </div>
+                </Dropdown>
+
+                <Dropdown
+                  // open={isOpen("from")}
+                  // onOpenChange={(flag) => setOpenDropdownId(flag ? "from" : null)}
+                  popupRender={() => (
+                    <AirportSearchDropdown onSelect={handleSelectedTo} />
+                  )}
+                  trigger={["click"]}
+                >
+                  <div
+                    style={{
+                      borderRadius: " 7.07px",
+                      border: "0.442px solid var(--ccc, #CCC)",
+                      background: "var(--FFFFFF---pure-white, #FFF)",
+                      // height: "88.372px",
+                    }}
+                    className="px-[17.08px] py-[10.64px] space-y-3  w-full min-w-[198px]"
+                  >
+                    <h5 className="text-[#616060] text-sm">To</h5>
+                    <h2 className="text-[#292828] text-[18px] font-bold ">
+                
+                      { toValue?.city ? toValue.city : "Select a city"}
+                    </h2>
+                    <p className="text-[#616060] text-base  line-clamp-1">
+                     
+                      {toValue?.airport ? toValue.airport : "Click to choose an airport"}
+                    </p>
+                  </div>
+                </Dropdown>
+                <button
+                  style={{
+                    border: "0.442px solid var(--ccc, #CCC)",
+                    background: "var(--FFFFFF---pure-white, #FFF)",
+                    height: "100%",
+                  }}
+                  className="px-[17.08px] text-start relative space flex justify-between flex-col py-[10.64px] w-full min-w-[179.294px] rounded-s-[7.07px] "
+                >
+                  <h5 className="text-[#616060] text-sm">Journey Date</h5>
+                  <DatePicker
+                    // open={open}
+                    format="DD MMM, YYYY"
+                    defaultValue={journeyDate}
+                    value={journeyDate}
+                    onChange={(date) => {
+                      if (date) {
+                        setJourneyDate(date);
+                      }
+                    }}
+                    renderExtraFooter={() => null}
+                    suffixIcon={null}
+                    style={{ border: "none", padding: 0 }}
+                    className="font-bold "
+                  />
+                  <h4 className="text-[#616060] text-base line-clamp-1">
+                    {/* Saturday */}
+                    {journeyDate ? journeyDate.format("dddd") : ""}
+                  </h4>
+                </button>
+
+                <div
+                  style={{
+                    borderRadius: " 7.07px",
+                    border: "0.442px solid var(--ccc, #CCC)",
+                    background: "var(--FFFFFF---pure-white, #FFF)",
+                    // height: " 88.372px",
+                  }}
+                  className="   min-w-[197.437px] "
+                >
+                  {isLastIndex ? (
+                    <div className="flex items-center w-full h-full text-center">
+                      <button
+                        disabled={multicityRowLength === 4}
+                        onClick={() => {
+                          setMulticityRowLength(multicityRowLength + 1);
+                        }}
+                        className="text-[#292828] basis-[70%] h-full cursor-pointer text-xs font-bold"
+                      >
+                        Add Another City
+                      </button>
+
+                      <button
+                        disabled={isFirstIndex}
+                        onClick={() => {
+                          setMulticityRowLength(multicityRowLength - 1);
+                        }}
+                        className="basis-[30%] border-l border-[#CCC] h-full cursor-pointer "
+                      >
+                        <CloseCircleFilled />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-full h-full"></div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* Search Button */}
