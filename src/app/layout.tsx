@@ -1,12 +1,10 @@
-import { Sidebar } from "@/components/Common/AntdItem/Sidebar/Sidebar";
-import ContentNavWrapper from "@/components/Common/ContentNavWrapper/ContentNavWrapper";
 import { theme } from "@/theme/themeConfig";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
-import { ConfigProvider, Layout } from "antd";
+import { ConfigProvider } from "antd";
 import type { Metadata } from "next";
 import localFont from 'next/font/local';
-import "./globals.css";
 import { Toaster } from "sonner";
+import "./globals.css";
 
 const Optima = localFont({
   src: [
@@ -55,19 +53,8 @@ export default function RootLayout({
       >
         <AntdRegistry>
           <ConfigProvider theme={theme}>
-            <Layout>
-              <Sidebar />
-              <Toaster />
-              {/* <Layout className="ml-[280px]" >
-                <NavBar />
-                <AppContent>{children}</AppContent>
-              </Layout> */}
-              <ContentNavWrapper>
-                {
-                  children
-                }
-              </ContentNavWrapper>
-            </Layout>
+             <Toaster />
+            {children}
           </ConfigProvider>
         </AntdRegistry>
       </body>

@@ -12,17 +12,20 @@ import dayjs, { Dayjs } from "dayjs";
 import lodash from "lodash";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { RiFlightTakeoffLine, RiHotelFill } from "react-icons/ri";
 import { toast } from "sonner";
 import AirportSearchDropdown from "./AirportSearchDropdown/AirportSearchDropdown";
 import PassengerSelector from "./PassengerSelector/PassengerSelector";
 import "./Search.css";
+import { FaCcVisa, FaGift } from "react-icons/fa";
+import { GiBirdHouse } from "react-icons/gi";
 
 interface JourneyDate {
   id: number;
   date: Dayjs | null;
 }
 export default function FlightSearch() {
-  const [activeTab, setActiveTab] = useState("All");
+  const [activeTab, setActiveTab] = useState("Flight");
   const [tripType, setTripType] = useState<
     "oneWay" | "roundTrip" | "multiCity"
   >("oneWay");
@@ -210,7 +213,13 @@ export default function FlightSearch() {
     router.replace(`/?${params.toString()}`);
   };
 
-  const tabs = ["Flight", "Hotel", "Package", "Visa", "Umrah"];
+const tabs = [
+  { title: "Flight", icon: <RiFlightTakeoffLine/> },
+  { title: "Hotel", icon: <RiHotelFill /> },
+  { title: "Package", icon: <FaGift/> }, // Custom SVG
+  { title: "Visa", icon: <FaCcVisa/> },
+  { title: "Umrah", icon: <GiBirdHouse/>  },
+];
 
   const handleRemoveRow = (index: number) => {
     // Remove current index from all arrays
@@ -260,36 +269,17 @@ export default function FlightSearch() {
               style={{
                 borderRadius: 8,
               }}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => setActiveTab(tab?.title)}
               className={`py-[16px] px-6 text-sm font-medium flex items-center gap-2 ${
-                activeTab === tab
+                activeTab === tab?.title
                   ? "bg-[#F4E8E8] text-[#8E191C] border-r border-l border-x-[#A54749]"
                   : "text-[#616161]"
               }`}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="none"
-              >
-                <path
-                  d="M14.0757 3.40329C15.1998 2.91085 16.2376 3.16114 17.1463 3.41492C17.5272 3.52065 17.9535 3.63904 18.2159 3.82854C18.6259 4.12464 18.8944 4.58127 18.9498 5.08466C18.9917 5.46542 18.8709 5.84794 18.7774 6.21245C18.5454 7.11723 18.2446 8.13452 17.2469 8.85144C16.8721 9.12078 16.2943 9.41719 15.8323 9.63919C15.3575 9.86736 14.9539 10.0409 14.9004 10.0638L8.89468 12.6434C8.18708 12.9467 8.03037 13.0304 7.92603 13.1524C7.44029 13.7203 7.44852 14.6681 7.27142 15.3589C7.18238 15.7062 6.93447 16.0874 6.64994 16.3643C6.38467 16.6225 5.90122 16.9669 5.3233 16.8469C4.72823 16.7234 4.53545 16.1753 4.46939 15.6444L4.06237 13.0912C4.03718 12.9337 4.02459 12.8549 3.98536 12.7877C3.94612 12.7204 3.88378 12.6707 3.75909 12.5713L1.71695 10.9425C1.28701 10.6228 0.899275 10.1829 1.09165 9.60269C1.2784 9.03936 1.82826 8.79911 2.18246 8.70294C2.56663 8.59861 3.02149 8.57803 3.36592 8.67419C4.06556 8.86961 4.89029 9.35103 5.6384 9.21869C5.80011 9.19003 5.95249 9.09719 6.57155 8.64486L11.8384 4.80239C11.8854 4.76795 12.2395 4.50978 12.6772 4.2181C13.1032 3.93424 13.6521 3.58882 14.0757 3.40329Z"
-                  fill="#8E191C"
-                />
-                <g opacity="0.4">
-                  <path
-                    d="M11.0062 12.871C10.6786 13.0118 10.5147 13.0822 10.4477 13.2274C10.3807 13.3725 10.4336 13.5429 10.5392 13.8835L11.5797 17.2395C11.669 17.5275 11.849 17.8991 12.2503 18.0559C12.6508 18.2123 13.0301 18.06 13.2757 17.9192C13.7017 17.6749 14.0561 17.3799 14.2975 16.9728C14.5387 16.5662 14.6312 16.1085 14.6427 15.6028L14.7291 11.7854C14.7343 11.552 14.737 11.4353 14.6616 11.3844C14.5862 11.3334 14.4788 11.3795 14.2642 11.4717L11.0062 12.871Z"
-                    fill="#8E191C"
-                  />
-                  <path
-                    d="M7.00585 2.27741C6.54081 2.0222 6.07997 1.86692 5.58947 1.87118C5.09803 1.87545 4.64766 2.03926 4.20306 2.29643C3.94777 2.4441 3.61889 2.70309 3.55388 3.13723C3.48899 3.57059 3.72573 3.9203 3.93934 4.15071L6.29441 6.65517C6.53437 6.91035 6.65434 7.03793 6.81127 7.05255C6.96818 7.06718 7.10967 6.96395 7.39264 6.75751L10.3074 4.63099C10.498 4.49196 10.5933 4.42245 10.5874 4.33108C10.5816 4.23971 10.4782 4.18297 10.2713 4.06949L7.00585 2.27741Z"
-                    fill="#8E191C"
-                  />
-                </g>
-              </svg>
-              {tab}
+             {
+              tab?.icon
+             }
+              {tab?.title}
             </button>
           ))}
         </div>

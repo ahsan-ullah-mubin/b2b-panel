@@ -21,5 +21,19 @@ export const theme: ThemeConfig = {
       siderBg: "#353535",
       // colorBgHeader: '#0B172B',
     },
+    Typography: {
+      titleMarginBottom: 0,
+    },
+    Button: {
+      defaultBg: "#8E191C",
+      defaultBorderColor: "#8E191C",
+      defaultColor:"#FFF",
+      defaultHoverBorderColor:"#8E191C",
+      defaultHoverColor:"#8E191C"
+    },
+    Input:{
+      hoverBorderColor:"#8E191C",
+      activeBorderColor:"#8E191C",
+    }
   },
 };
