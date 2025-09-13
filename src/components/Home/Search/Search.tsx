@@ -464,7 +464,7 @@ export default function FlightSearch() {
                   placeholder="Save more on return flight"
                   style={{ border: "none", padding: 0 }}
                   disabledDate={(current) =>
-                    current && current < journeyDates[0]?.date?.startOf("day")
+                    current && current < journeyDates[0]!.date!.startOf("day")
                   }
                   className="font-bold"
                 />
