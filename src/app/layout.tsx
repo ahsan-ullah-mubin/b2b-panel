@@ -6,6 +6,7 @@ import { ConfigProvider, Layout } from "antd";
 import type { Metadata } from "next";
 import localFont from 'next/font/local';
 import "./globals.css";
+import { Toaster } from "sonner";
 
 const Optima = localFont({
   src: [
@@ -56,7 +57,7 @@ export default function RootLayout({
           <ConfigProvider theme={theme}>
             <Layout>
               <Sidebar />
-
+              <Toaster />
               {/* <Layout className="ml-[280px]" >
                 <NavBar />
                 <AppContent>{children}</AppContent>

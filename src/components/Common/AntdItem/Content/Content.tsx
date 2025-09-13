@@ -37,6 +37,15 @@ export function AppContent({ children }: { children: React.ReactNode }) {
     opacity: 1;       
 }
 
+.ant-picker-dropdown .ant-picker-cell-in-view.ant-picker-cell-selected:not(.ant-picker-cell-disabled) .ant-picker-cell-inner, :where(.css-dev-only-do-not-override-76q3wc).ant-picker-dropdown .ant-picker-cell-in-view.ant-picker-cell-range-start:not(.ant-picker-cell-disabled) .ant-picker-cell-inner, :where(.css-dev-only-do-not-override-76q3wc).ant-picker-dropdown .ant-picker-cell-in-view.ant-picker-cell-range-end:not(.ant-picker-cell-disabled) .ant-picker-cell-inner {
+    color: #fff;
+    background: #8E191C;
+}
+.ant-picker-dropdown .ant-picker-cell-in-view.ant-picker-cell-today .ant-picker-cell-inner::before {
+    border: 1px solid #8E191C;
+}
+
+
   `;
 
   return (

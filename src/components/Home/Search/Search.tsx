@@ -1,20 +1,26 @@
 "use client";
 
+import { SearchConfig } from "@/config/SearchConfig/search.config";
 import { FlightSearchFormNToType, Passengers } from "@/types/FlightSearch";
 import {
   CloseCircleFilled,
   SearchOutlined,
   SwapOutlined,
 } from "@ant-design/icons";
-import lodash from "lodash";
 import { Button, Card, DatePicker, Dropdown, Radio } from "antd";
 import dayjs, { Dayjs } from "dayjs";
+import lodash from "lodash";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import AirportSearchDropdown from "./AirportSearchDropdown";
+import { toast } from "sonner";
+import AirportSearchDropdown from "./AirportSearchDropdown/AirportSearchDropdown";
+import PassengerSelector from "./PassengerSelector/PassengerSelector";
 import "./Search.css";
-import PassengerSelector from "./Travelar/TravelDropdown";
-import { SearchConfig } from "@/config/SearchConfig/search.config";
+
+interface JourneyDate {
+  id: number;
+  date: Dayjs | null;
+}
 export default function FlightSearch() {
   const [activeTab, setActiveTab] = useState("All");
   const [tripType, setTripType] = useState<
@@ -40,9 +46,9 @@ export default function FlightSearch() {
   ]);
 
   const [multicityRowLength, setMulticityRowLength] = useState<number>(1);
-  const [journeyDates, setJourneyDates] = useState<
-    { id: number; date: Dayjs }[]
-  >([{ id: 1, date: dayjs() }]);
+  const [journeyDates, setJourneyDates] = useState<JourneyDate[]>([
+    { id: 1, date: dayjs() },
+  ]);
 
   const [returnDate, setReturnDate] = useState<Dayjs | null>(null);
   const [passengers, setPassengers] = useState<Passengers>({
@@ -70,14 +76,18 @@ export default function FlightSearch() {
     code: string;
   }) => {
     setFrom((prev) => {
-      const exists = prev.find((item) => item.id === airport.id);
+      const newFrom = [...prev];
 
+      for (let i = 1; i < airport.id; i++) {
+        if (!newFrom.find((item) => item.id === i)) {
+          newFrom.push({ id: i, city: "", country: "", airport: "", code: "" });
+        }
+      }
+      const exists = newFrom.find((item) => item.id === airport.id);
       if (exists) {
-        // update existing
-        return prev.map((item) => (item.id === airport.id ? airport : item));
+        return newFrom.map((item) => (item.id === airport.id ? airport : item));
       } else {
-        // add new
-        return [...prev, airport];
+        return [...newFrom, airport];
       }
     });
 
@@ -102,20 +112,23 @@ export default function FlightSearch() {
     code: string;
   }) => {
     setTo((prev) => {
-      const exists = prev.find((item) => item.id === airport.id);
+      const newFrom = [...prev];
 
+      for (let i = 1; i < airport.id; i++) {
+        if (!newFrom.find((item) => item.id === i)) {
+          newFrom.push({ id: i, city: "", country: "", airport: "", code: "" });
+        }
+      }
+      const exists = newFrom.find((item) => item.id === airport.id);
       if (exists) {
-        // update existing
-        return prev.map((item) => (item.id === airport.id ? airport : item));
+        return newFrom.map((item) => (item.id === airport.id ? airport : item));
       } else {
-        // add new
-        return [...prev, airport];
+        return [...newFrom, airport];
       }
     });
     const findInForm = from?.find((item) => item?.id === airport?.id);
 
     if (lodash.isEqual(findInForm, airport)) {
-
       setFrom((prev) =>
         prev.map((item) =>
           item.id === airport.id
@@ -128,11 +141,20 @@ export default function FlightSearch() {
 
   const handleJourneyDateChange = (id: number, date: Dayjs) => {
     setJourneyDates((prev) => {
-      const exists = prev.find((d) => d.id === id);
+      const newDates = [...prev];
+
+      for (let i = 1; i < id; i++) {
+        if (!newDates.find((d) => d.id === i)) {
+          newDates.push({ id: i, date: null });
+        }
+      }
+
+      const exists = newDates.find((d) => d.id === id);
       if (exists) {
-        return prev.map((d) => (d.id === id ? { ...d, date } : d));
+        return newDates.map((d) => (d.id === id ? { ...d, date } : d));
       } else {
-        return [...prev, { id, date }];
+        // add new
+        return [...newDates, { id, date }];
       }
     });
   };
@@ -140,10 +162,26 @@ export default function FlightSearch() {
   const router = useRouter();
 
   const handleSearch = () => {
+    if (tripType === "multiCity") {
+      const maxRow = multicityRowLength;
+
+      for (let i = 1; i <= maxRow; i++) {
+        if (!from[i]?.code) {
+          return toast.warning("Please select a From destination");
+        }
+        if (!to[i]?.code) {
+          return toast.warning("Please select a To destination");
+        }
+        if (!journeyDates[i]?.date) {
+          return toast.warning("Please select a Journey date");
+        }
+      }
+    }
+
     const { adults, children, childAges, infants, travelClass } = passengers;
     const trips =
       tripType === "roundTrip"
-        ? `${from[0].code},${to[0].code},${journeyDates[0]?.date.format(
+        ? `${from[0].code},${to[0].code},${journeyDates[0]?.date?.format(
             "YYYY-MM-DD"
           )},${to[0].code},${from[0].code},${returnDate?.format("YYYY-MM-DD")}`
         : tripType === "multiCity"
@@ -154,7 +192,7 @@ export default function FlightSearch() {
               return `${f.code},${t?.code},${jd?.date?.format("YYYY-MM-DD")}`;
             })
             .join(",")
-        : `${from[0].code},${to[0].code},${journeyDates[0]?.date.format(
+        : `${from[0].code},${to[0].code},${journeyDates[0]?.date?.format(
             "YYYY-MM-DD"
           )}`;
 
@@ -173,6 +211,17 @@ export default function FlightSearch() {
   };
 
   const tabs = ["Flight", "Hotel", "Package", "Visa", "Umrah"];
+
+  const handleRemoveRow = (index: number) => {
+    // Remove current index from all arrays
+    setFrom((prev) => prev.filter((_, i) => i !== index));
+    setTo((prev) => prev.filter((_, i) => i !== index));
+    setJourneyDates((prev) => prev.filter((_, i) => i !== index));
+
+    // Reduce total row length
+    setMulticityRowLength((prev) => prev - 1);
+  };
+
   return (
     <div
       style={{
@@ -250,6 +299,7 @@ export default function FlightSearch() {
             onChange={(e) => {
               const value = e.target.value;
               setTripType(value);
+              setMulticityRowLength(1);
               if (value === "oneWay") {
                 setReturnDate(null);
               } else if (value === "roundTrip") {
@@ -466,7 +516,6 @@ export default function FlightSearch() {
           {/* row 1  */}
           <div className=" grid grid-cols-4    gap-[21.79px]">
             <Dropdown
-       
               popupRender={() => (
                 <AirportSearchDropdown onSelect={handleSelectFrom} />
               )}
@@ -543,6 +592,9 @@ export default function FlightSearch() {
                 suffixIcon={null}
                 style={{ border: "none", padding: 0 }}
                 className="font-bold "
+                disabledDate={(current) => {
+                  return current && current < dayjs().startOf("day");
+                }}
               />
               <h4 className="text-[#616060] text-base line-clamp-1">
                 {/* Saturday */}
@@ -590,15 +642,16 @@ export default function FlightSearch() {
             const isFirstIndex = index === 0;
 
             const isLastIndex = index === multicityRowLength - 1;
-            // console.log("ata holo index========", index + 2);
             const startingIndex = index + 2;
             const fromValue = from[index + 1];
             const toValue = to[index + 1];
             const journeyDateValue = journeyDates[index + 1];
+            const lastJourneyDate = journeyDates[index];
+
             return (
               <div key={index} className="grid grid-cols-4 gap-[21.79px]">
                 <Dropdown
-                  onOpenChange={(flag) => console.log("ata flag--------", flag)}
+                  // onOpenChange={(flag) => console.log("ata flag--------", flag)}
                   popupRender={() => (
                     <AirportSearchDropdown
                       onSelect={handleSelectFrom}
@@ -682,6 +735,12 @@ export default function FlightSearch() {
                     suffixIcon={null}
                     style={{ border: "none", padding: 0 }}
                     className="font-bold "
+                    disabledDate={(current) => {
+                      const baseDate =
+                        lastJourneyDate?.date?.startOf("day") ||
+                        dayjs().startOf("day");
+                      return current && current < baseDate;
+                    }}
                   />
                   <h4 className="text-[#616060] text-base line-clamp-1">
                     {/* Saturday */}
@@ -707,19 +766,21 @@ export default function FlightSearch() {
                         onClick={() => {
                           setMulticityRowLength(multicityRowLength + 1);
                         }}
-                        className="text-[#292828] basis-[70%] h-full cursor-pointer text-xs font-bold"
+                        className="text-[#292828] disabled:text-[#a1a1aa] basis-[70%] h-full cursor-pointer text-xs font-bold"
                       >
                         Add Another City
                       </button>
 
                       <button
                         disabled={isFirstIndex}
-                        onClick={() => {
-                          setMulticityRowLength(multicityRowLength - 1);
-                        }}
+                        onClick={() => handleRemoveRow(multicityRowLength)}
                         className="basis-[30%] border-l border-[#CCC] h-full cursor-pointer "
                       >
-                        <CloseCircleFilled />
+                        <CloseCircleFilled
+                          style={{
+                            color: isFirstIndex ? "#a1a1aa" : "#292828",
+                          }}
+                        />
                       </button>
                     </div>
                   ) : (
