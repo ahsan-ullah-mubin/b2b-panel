@@ -1,13 +1,13 @@
 import FlightSearch from '@/components/Home/Search/Search'
 import SpecialOffer from '@/components/Home/SpecialOffer/SpecialOffer'
-import React from 'react'
+import SearchResult from '@/components/SearchResult/SearchResult'
 
 export default function Home() {
   return (
-    <>
-        <FlightSearch/>
-        <SpecialOffer/>
-
-    </>
+    <div className='my-12'>
+      <FlightSearch />
+      <SpecialOffer />
+      <SearchResult />
+    </div>
   )
 }
